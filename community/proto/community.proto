@@ -1,7 +1,7 @@
 syntax = "proto3";
 package community;
 
-option go_package = "github.com/abhirajranjan/spaces/grpc-protos/community";
+option go_package = "github.com/abhirajranjan/spaces/microservices/community/proto";
 
 enum DEFAULTS {
   STRING_DEFAULT = 0;

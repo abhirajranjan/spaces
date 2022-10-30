@@ -1,4 +1,4 @@
-module github.com/abhirajranjan/spaces/grpc-protos/community
+module github.com/abhirajranjan/spaces/microservices/community
 
 go 1.19
 
