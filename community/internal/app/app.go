@@ -24,6 +24,7 @@ func (s *Server) CommunitySearch(in *pb.CommunityGetRequest, srv pb.CommunitySer
 		wg.Add(1)
 		go func(count int64) {
 			mutex.Lock()
+			defer mutex.Unlock()
 			defer wg.Done()
 			desc := "Student"
 			resp := pb.CommunityMetaData{
@@ -34,7 +35,6 @@ func (s *Server) CommunitySearch(in *pb.CommunityGetRequest, srv pb.CommunitySer
 			if err := srv.Send(&resp); err != nil {
 				log.Printf("send error %v", err)
 			}
-			mutex.Unlock()
 			log.Printf("finishing request number : %d", count)
 		}(int64(i))
 	}
