@@ -7,7 +7,7 @@ import (
 	"net"
 
 	app "github.com/abhirajranjan/spaces/community/internal/app"
-	pb "github.com/abhirajranjan/spaces/proto/pkg/community"
+	pb "github.com/abhirajranjan/spaces/community/pkg/grpc"
 
 	"google.golang.org/grpc"
 )

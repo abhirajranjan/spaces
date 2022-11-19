@@ -5,24 +5,28 @@ import (
 	pb "github.com/abhirajranjan/spaces/community/pkg/grpc"
 )
 
-// TODO: make getCommunities a stream compatible thing. Possibly a generator ?
-// ! Currently doesnt stream data. cannot be integrated application api
-func (d *db) GetCommunities(filter interface{}) ([]*pb.CommunityMetaData, error) {
-	return filterQueries(filter)
+func GetCommunity(filter *pb.CommunityGetRequest) (*pb.CommunityMetaData, error) {
+	result, err := filterQueriesFindOne(filter)
+	switch err {
+	case NoAccountExists:
+		return nil, err
+	case nil:
+		return result, nil
+	default:
+		//* on unmarshal failed, return no account exists and log err
+		handleError("dataUnmarshalError (GetCommunity)", err)
+		return nil, NoAccountExists
+	}
 }
 
-func (d *db) GetCommunity(filter interface{}) (*pb.CommunityMetaData, error) {
-	metadata, err := d.GetCommunities(filter)
-	if err == nil {
-		return new(pb.CommunityMetaData), err
+func CommunitySearchStream(in *pb.CommunityGetRequest, stream interface {
+	Send(*pb.CommunityMetaData) error
+}) error {
+	errorChannel := streamFilterQueries(in, stream)
+	if err, open := <-errorChannel; open {
+		handleError("dbSearchStream", err)
+		close(errorChannel)
+		return err
 	}
-	// ? if only one metadata match then only return ?
-	if len(metadata) == 1 {
-		return metadata[0], err
-	}
-	if len(metadata) == 0 {
-		return new(pb.CommunityMetaData), NoAccountExists
-	}
-	// TODO: what to do with multiple matched results ?
-	return metadata[0], nil
+	return nil
 }

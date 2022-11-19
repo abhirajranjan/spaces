@@ -5,7 +5,7 @@ import (
 	pb "github.com/abhirajranjan/spaces/community/pkg/grpc"
 )
 
-func (d *db) NewCommunity(metadata *pb.CommunityMetaData) (Hex, error) {
+func NewCommunity(metadata *pb.CommunityMetaData) (Hex, error) {
 	err := verifyNewMetaData(metadata)
 	if err != nil {
 		return Hex{value: "0"}, err
@@ -30,9 +30,17 @@ func verifyNewMetaData(metadata *pb.CommunityMetaData) error {
 		Name: metadata.Name,
 		Tag:  metadata.Tag,
 	}
-	ds, err := filterQueries(&filterNameTags)
-	if err == NoAccountExists && len(ds) == 0 {
+	_, err := filterQueriesFindOne(&filterNameTags)
+	switch err {
+	// true if no account matches data
+	case NoAccountExists:
 		return nil
+	//if error is nil then account exists
+	case nil:
+		return AccountAlreadyExists
+	// if any other error occured returns DBError
+	default:
+		handleError("DBError(verifyNewMetaData)", err)
+		return DBError
 	}
-	return AccountAlreadyExists
 }

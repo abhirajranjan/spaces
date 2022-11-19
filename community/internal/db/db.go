@@ -16,9 +16,8 @@ import (
 var collection *mongo.Collection
 var ctx = context.Background()
 
-type db struct{}
-
-func (d *db) Init(database string, col string) {
+// initialise the database
+func InitDb(database string, col string) {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017/")
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
@@ -32,9 +31,13 @@ func (d *db) Init(database string, col string) {
 	collection = client.Database(database).Collection(col)
 }
 
-// TODO: break function for robust and schema less conversion
+// TODO: getrequest to bson_M
 // ? need to convert all key to lowercase? can't just lowercase the first ?
 func metadataToBson_M(buffer interface{}) bson.M {
+	switch b := buffer.(type) {
+	case bson.M:
+		return b
+	}
 	var bsonM bson.M = make(map[string]interface{})
 
 	s := reflect.ValueOf(buffer).Elem()
@@ -86,41 +89,59 @@ func metadataToBson_M(buffer interface{}) bson.M {
 	return bsonM
 }
 
-// TODO: make fiterQueries a stream compatible thing. Possibly a generator ?
-// filter queries from database
-func filterQueries(filter interface{}) ([]*pb.CommunityMetaData, error) {
-	return _filterQueries(metadataToBson_M(filter))
+// convert filter to bson.M type
+func preProcessRequest(filter interface{}) bson.M {
+	return metadataToBson_M(filter)
 }
 
-func _filterQueries(filter interface{}) ([]*pb.CommunityMetaData, error) {
-	var metadata []*pb.CommunityMetaData
-
-	cur, err := collection.Find(ctx, filter)
-	if err != nil {
-		return metadata, err
-	}
-	defer cur.Close(ctx)
-
-	// iterate over all queries in cur and add it to metadata
-	for cur.Next(ctx) {
-		var m pb.CommunityMetaData
-		if err := cur.Decode(&m); err != nil {
-			return metadata, err
+// stream the result to stream.Send() and returns error
+// TODO: set options for better matching of incomplete query
+func streamFilterQueries(filter interface{}, stream interface {
+	Send(*pb.CommunityMetaData) error
+}) chan error {
+	c := make(chan error, 1)
+	go func() {
+		cur, err := collection.Find(ctx, preProcessRequest(filter))
+		if err != nil {
+			c <- err
 		}
-		metadata = append(metadata, &m)
-	}
+		defer cur.Close(ctx)
 
-	if err := cur.Err(); err != nil {
-		return metadata, err
-	}
-
-	// check if no document find with given filter
-	if len(metadata) == 0 {
-		return metadata, NoAccountExists
-	}
-	return metadata, nil
+		for cur.Next(ctx) {
+			var m pb.CommunityMetaData
+			if err := cur.Decode(&m); err != nil {
+				c <- err
+			}
+			if err := stream.Send(&m); err != nil {
+				c <- err
+			}
+		}
+		if err := cur.Err(); err != nil {
+			c <- err
+		}
+		close(c)
+	}()
+	return c
 }
 
+/* find one matched result from db
+returns nil and error equals NoAccountsExists if no match found
+returns matched document and error equals nil if match found
+*/
+// TODO: set options for better matching of incomplete query
+func filterQueriesFindOne(filter interface{}) (*pb.CommunityMetaData, error) {
+	doc := collection.FindOne(ctx, preProcessRequest(filter))
+	if doc.Err() == mongo.ErrNoDocuments {
+		return nil, NoAccountExists
+	}
+	var m pb.CommunityMetaData
+	if err := doc.Decode(&m); err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
+// insert Data to the document
 func insertData(metadata *pb.CommunityMetaData) (Hex, error) {
 	res, err := collection.InsertOne(ctx, metadata)
 	if err != nil {
