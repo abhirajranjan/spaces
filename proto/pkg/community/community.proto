@@ -25,10 +25,9 @@ service CommunityService {
   // reading data 
   rpc GetCommunity(CommunityGetRequest) returns (CommunityMetaData) {}
   rpc CommunitySearch(CommunityGetRequest) returns (stream CommunityMetaData) {}
-  
+  rpc GetSpaces(CommunityGetRequest) returns (stream CommunityMetaData) {}
   // posting data
   rpc NewCommunity(CommunityMetaData) returns (Status) {}
-  rpc AddSpace(CommunityMetaData) returns (Status) {}
 }
 
 message Status {
@@ -42,19 +41,24 @@ message SpacesCompact {
 
 // request community data : Request
 message CommunityGetRequest {
-  NUMBER_NUM requestType = 1; // either 1 or 0
-  optional string id = 2; // search by id : requestType must be 0 
-  optional string query = 3; // search by query : requestType must be 1
-  optional string page_number = 4; // parameters for query
-  optional int32 request_per_page = 5; // parameters for query
+  optional int64 id = 1; // search by id 
+  optional string name = 2;
+  optional string shortname = 3;
+  // TODO: search by spaces
 }
 
 // get community data : Response
 message CommunityMetaData {
-  optional STATUS status = 1; 
-  string id = 2; // unique id of community
-  string name = 3; // name of community
-  optional string Description = 4; // description of community
-  optional string banner = 5; // banner source in server 
-  repeated SpacesCompact spaces = 6; // spaces id
+  // unique id of community 
+  int64 id = 1;
+  // name of community
+  string name = 2;
+  // searchable short name {optional}
+  optional string shortname = 3;
+  // description of community
+  optional string Description = 4;
+  // banner source in server
+  optional string banner = 5; 
+  // spaces id
+  repeated SpacesCompact spaces = 6; 
 }

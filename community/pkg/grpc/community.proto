@@ -28,6 +28,7 @@ service CommunityService {
   rpc GetSpaces(CommunityGetRequest) returns (stream CommunityMetaData) {}
   // posting data
   rpc NewCommunity(CommunityMetaData) returns (MStatus) {}
+  // TODO: NewSpace
 }
 
 message MStatus {
