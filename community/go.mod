@@ -1,6 +1,6 @@
 module github.com/abhirajranjan/spaces/community
 
-go 1.19
+go 1.16
 
 require (
 	github.com/confluentinc/confluent-kafka-go v1.9.2
@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/elastic/go-elasticsearch/v8 v8.5.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 )

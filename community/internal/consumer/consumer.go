@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/abhirajranjan/spaces/community/pkg/topics"
+	"github.com/abhirajranjan/spaces/community/pkg/constants"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
@@ -14,14 +14,14 @@ func Initialize(c kafka.ConfigMap) {
 	var err error
 
 	var conf kafka.ConfigMap = c
-	conf["group.id"] = "kafka-go-getting-started"
+	conf["group.id"] = constants.ConsumeGroupID
 	conf["auto.offset.reset"] = "earliest"
 	Consumer, err = kafka.NewConsumer(&conf)
 	if err != nil {
 		log.Fatalf("Failed to create consumer: %s", err)
 		os.Exit(1)
 	}
-	err = Consumer.SubscribeTopics([]string{"^" + topics.SelfPrefix + ".*"}, nil)
+	err = Consumer.SubscribeTopics([]string{constants.Self}, nil)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)

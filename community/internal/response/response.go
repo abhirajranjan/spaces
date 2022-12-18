@@ -7,4 +7,4 @@ import (
 
 // TODO: implement response
 func GenerateJson(doc bson.D) []byte
-func Send([]kafka.Header, []byte) error
+func Send(k []kafka.Header, s string) error

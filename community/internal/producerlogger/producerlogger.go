@@ -15,7 +15,8 @@ func Producerlogger() {
 			if ev.TopicPartition.Error != nil {
 				logger.Logger.Sugar().Warnf("Failed to deliver message: %v\n", ev.TopicPartition.Topic)
 			} else {
-				fmt.Printf("Produced event to topic %s: key = %-10s value = %s\n",
+				// ? should we really log that ?
+				go fmt.Printf("Produced event to topic %s: key = %-10s value = %s\n",
 					*ev.TopicPartition.Topic, string(ev.Key), string(ev.Value))
 			}
 		}

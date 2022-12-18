@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/abhirajranjan/spaces/community/internal/producer"
-	"github.com/abhirajranjan/spaces/community/pkg/topics"
+	"github.com/abhirajranjan/spaces/community/pkg/constants"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -32,8 +32,8 @@ func InitializeLogger() {
 func (ls customwriter) Write(p []byte) (n int, err error) {
 	fmt.Println(p)
 	err = ls.Producer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &topics.Log, Partition: kafka.PartitionAny},
-		Key:            []byte(topics.SelfPrefix),
+		TopicPartition: kafka.TopicPartition{Topic: &constants.Log, Partition: kafka.PartitionAny},
+		Key:            []byte(constants.Self),
 		Value:          []byte(p),
 	}, nil)
 	n = len(p)

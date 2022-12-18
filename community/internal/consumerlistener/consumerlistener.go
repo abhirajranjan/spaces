@@ -1,15 +1,20 @@
 package consumerlistener
 
 import (
-	"fmt"
+	"encoding/base64"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	GC "github.com/abhirajranjan/spaces/community/internal/GetCommunity"
+	NC "github.com/abhirajranjan/spaces/community/internal/NewCommunity"
+	NS "github.com/abhirajranjan/spaces/community/internal/NewSpace"
+	SC "github.com/abhirajranjan/spaces/community/internal/SearchCommunity"
+	UM "github.com/abhirajranjan/spaces/community/internal/UpdateMetadata"
 	"github.com/abhirajranjan/spaces/community/internal/consumer"
-	"github.com/abhirajranjan/spaces/community/pkg/topics"
+	"github.com/abhirajranjan/spaces/community/pkg/constants"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
@@ -37,21 +42,16 @@ func Listen() {
 }
 
 func processEvent(message *kafka.Message) {
-	switch *message.TopicPartition.Topic {
-	case topics.GetCommunity:
-		fmt.Println("Getting community")
-		// GC.Handle(message)
-	case topics.SearchCommunity:
-		fmt.Println("Searching community")
-		// SC.Handle(message)
-	case topics.NewCommunity:
-		fmt.Println("New community")
-		// NC.Handle(message)
-	case topics.NewSpace:
-		fmt.Println("New Space")
-		// NS.Handle(message)
-	case topics.UpdateMetaData:
-		fmt.Println("Updating metadata")
-		// UM.Handle(message)
+	switch base64.RawStdEncoding.EncodeToString(message.Key) {
+	case constants.GetCommunity:
+		GC.Handle(message)
+	case constants.SearchCommunity:
+		SC.Handle(message)
+	case constants.NewCommunity:
+		NC.Handle(message)
+	case constants.NewSpace:
+		NS.Handle(message)
+	case constants.UpdateMetaData:
+		UM.Handle(message)
 	}
 }
