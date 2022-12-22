@@ -68,6 +68,7 @@ func execute(param *pb.QueryParameters, query string) (*pb.Response, error) {
 	res, err := db.ExecuteQuery(exeQuery)
 	if err != nil {
 		logger.Logger.Sugar().Error(err)
+		return nil, ErrCql
 	}
-	return res, ErrCql
+	return res, nil
 }

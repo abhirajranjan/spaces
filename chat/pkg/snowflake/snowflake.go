@@ -29,7 +29,7 @@ func Generate() snowflake.ID {
 	return node.Generate()
 }
 
-// TODO: implement int64 to snowflake conversion
-func ConvertIntToSnowFlake(val int64) *snowflake.ID {
-	return nil
+func ParseInt64(val int64) *snowflake.ID {
+	a := snowflake.ParseInt64(val)
+	return &a
 }
