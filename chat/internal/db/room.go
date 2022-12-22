@@ -1,8 +1,6 @@
 package db
 
 import (
-	"fmt"
-
 	"github.com/abhirajranjan/spaces/chat/pkg/constants"
 	"github.com/abhirajranjan/spaces/chat/pkg/logger"
 	"github.com/abhirajranjan/spaces/chat/pkg/snowflake"
@@ -21,7 +19,7 @@ func CreateRoom(request *constants.RoomCreationRequest) (room *constants.Room) {
 }
 
 func registerRoom(room *constants.Room) error {
-	cmd := fmt.Sprintf(registerRoomQuery, room.Room_id.Int64(), room.Author_id.Int64(), room.Name, room.Desc)
+	cmd := RegisterRoomQuery(room.Room_id.Int64(), room.Author_id.Int64(), room.Name, room.Desc)
 	logger.Logger.Sugar().Debugln(cmd)
 	if _, err := execute(nil, cmd); err == ErrCql {
 		return err

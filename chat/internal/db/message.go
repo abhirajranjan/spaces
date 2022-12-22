@@ -39,11 +39,11 @@ func ReadMessage(messagereq *constants.MessageReadRequest) (message *constants.M
 }
 
 func registerMessage(message *constants.Message) error {
-	cmd := fmt.Sprintf(registerMessageQuery,
-		message.Room_id,
+	cmd := RegisterMessageQuery(
+		message.Room_id.Int64(),
 		make_bucket(message.Message_id),
-		message.Message_id,
-		message.Author_id,
+		message.Message_id.Int64(),
+		message.Author_id.Int64(),
 		message.Content,
 	)
 
@@ -100,7 +100,7 @@ func readMessageFromDb(message *constants.MessageRead) error {
 }
 
 func getUserLastReadSnowFlake(Author_id *snowflake.ID, Room_id *snowflake.ID) *snowflake.ID {
-	cmd := fmt.Sprintf(getUserLastReadSnowFlakeQuery, Author_id.Int64(), Room_id.Int64())
+	cmd := GetUserLastReadSnowFlakeQuery(Author_id.Int64(), Room_id.Int64())
 	logger.Logger.Sugar().Debug(cmd)
 	res, err := execute(nil, cmd)
 
