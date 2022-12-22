@@ -24,12 +24,13 @@ var registerRoomQuery = "INSERT INTO " + namespace + roomTable + roomTableStruct
 
 var registerMessageQuery = "INSERT INTO " + namespace + messagesTable + messagesTableStruct + ` VALUES (%d, %d, %d, %d, '%s');`
 var readMessageQuery = "SELECT author_id, content, message_id FROM " + namespace + messagesTable + ` WHERE channel_id = %d and bucket = %d;`
+var deleteMessageQuery = " DELETE FROM " + namespace + messagesTable + ` WHERE message_id = %d and channel_id = %d and bucket = %d;`
 
 var insertUserQuery = "INSERT INTO " + namespace + userTable + userTableStruct + ` VALUES (%d, '%s');`
 var getUserNameFromUserIDQuery = "SELECT name FROM " + namespace + userTable + ` WHERE user_id = %d;`
 
 var updateUserLastReadQuery = "INSERT INTO " + namespace + userLastReadTable + userLastReadTableStruct + ` VALUES (%d, %d, %d);`
-var getUserLastReadSnowFlakeQuery = "SELECT last_snowflake_read FROM " + namespace + userLastReadTable + ` WHERE user_id = %d; and channel_id = %d`
+var getUserLastReadSnowFlakeQuery = "SELECT last_snowflake_read FROM " + namespace + userLastReadTable + ` WHERE user_id = %d; and channel_id = %d;`
 
 func RegisterRoomQuery(room_id int64, author_id int64, name string, description string) string {
 	return fmt.Sprintf(registerRoomQuery, room_id, author_id, name, description)
@@ -41,6 +42,10 @@ func RegisterMessageQuery(channel_id int64, bucket int64, message_id int64, auth
 
 func ReadMessageQuery(channel_id int64, bucket int64) string {
 	return fmt.Sprintf(readMessageQuery, channel_id, bucket)
+}
+
+func DeleteMessageQuery(message_id int64, channel_id int64, bucket int64) string {
+	return fmt.Sprintf(deleteMessageQuery, message_id, channel_id, bucket)
 }
 
 func InsertUserQuery(user_id int64, name string) string {

@@ -22,6 +22,7 @@ func CreateMessage(messagereq *constants.MessageRequest) (message *constants.Mes
 	message.Message_id = &id
 
 	if err := registerMessage(message); err != nil {
+		logger.Logger.Sugar().Error("error registering message", err, *message)
 		return nil
 	}
 	return message
@@ -35,6 +36,21 @@ func ReadMessage(messagereq *constants.MessageReadRequest) (message *constants.M
 
 	readMessageFromDb(message)
 
+	return message
+}
+
+func DeleteChat(messagereq *constants.MessageDeleteRequest) (message *constants.MessageDelete) {
+	message.Author_id = messagereq.Author_id
+	message.Bucket = messagereq.Bucket
+	message.Message_id = messagereq.Message_id
+	message.Room_id = messagereq.Room_id
+
+	if err := deleteMessageFromDb(message); err != nil {
+		logger.Logger.Sugar().Error("error deleting message", err, *message)
+		message.Status = 300
+	} else {
+		message.Status = 200
+	}
 	return message
 }
 
@@ -97,6 +113,17 @@ func readMessageFromDb(message *constants.MessageRead) error {
 	}
 	message.Content = arr
 	return nil
+}
+
+func deleteMessageFromDb(message *constants.MessageDelete) error {
+	cmd := DeleteMessageQuery(
+		message.Message_id.Int64(),
+		message.Room_id.Int64(),
+		message.Bucket,
+	)
+	logger.Logger.Sugar().Debug(cmd)
+	_, err := execute(nil, cmd)
+	return err
 }
 
 func getUserLastReadSnowFlake(Author_id *snowflake.ID, Room_id *snowflake.ID) *snowflake.ID {
