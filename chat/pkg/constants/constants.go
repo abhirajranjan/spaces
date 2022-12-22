@@ -11,6 +11,7 @@ var Event_NewChat = "chat.NewChat"
 var Event_DeleteChat = "chat.DeleteChat"
 var Event_CreateRoom = "chat.CreateRoom"
 var Event_DeleteRoom = "chat.DeleteRoom"
+var Event_NewUserCreated = "user.NewUserCreated"
 
 var ConsumeGroupID = "chat"
 var Log = "logging"

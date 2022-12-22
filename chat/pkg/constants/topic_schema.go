@@ -56,3 +56,9 @@ type MessageReadRequest struct {
 	PageSize    *wrapperspb.Int32Value `json:"page_size"`
 	PagingState *wrapperspb.BytesValue `json:"paging_state"`
 }
+
+// passive listeners
+type NewUserCreated struct {
+	User_id *snowflake.ID `json:"user_id"`
+	Name    string        `json:"name"`
+}
