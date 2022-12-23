@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/abhirajranjan/spaces/chat/pkg/constants"
 	"github.com/abhirajranjan/spaces/chat/pkg/logger"
@@ -10,10 +9,9 @@ import (
 	pb "github.com/stargate/stargate-grpc-go-client/stargate/pkg/proto"
 )
 
-var epoch int64 = 1420070400000
 var bucket_size int64 = 1000 * 60 * 60 * 24 * 10
 
-func CreateMessage(messagereq *constants.MessageRequest) (message *constants.Message) {
+func CreateMessage(messagereq *constants.MessageRequest) (message *constants.Message, status *constants.Status) {
 	id := snowflake.Generate()
 
 	message.Author_id = messagereq.Author_id
@@ -21,52 +19,46 @@ func CreateMessage(messagereq *constants.MessageRequest) (message *constants.Mes
 	message.Content = messagereq.Content
 	message.Message_id = &id
 
-	if err := registerMessage(message); err != nil {
-		logger.Logger.Sugar().Error("error registering message", err, *message)
-		return nil
-	}
-	return message
+	status = registerMessage(message)
+	return message, status
 }
 
-func ReadMessage(messagereq *constants.MessageReadRequest) (message *constants.MessageRead) {
+func ReadMessage(messagereq *constants.MessageReadRequest) (message *constants.MessageRead, status *constants.Status) {
 	message.Author_id = messagereq.Author_id
 	message.PageSize = messagereq.PageSize
 	message.PagingState = messagereq.PagingState
 	message.Room_id = messagereq.Room_id
 
-	readMessageFromDb(message)
-
-	return message
+	status = readMessageFromDb(message)
+	return message, status
 }
 
-func DeleteChat(messagereq *constants.MessageDeleteRequest) (message *constants.MessageDelete) {
-	message.Author_id = messagereq.Author_id
-	message.Bucket = messagereq.Bucket
-	message.Message_id = messagereq.Message_id
-	message.Room_id = messagereq.Room_id
+func DeleteChat(messagereq *constants.MessageDeleteRequest) (status *constants.Status) {
+	cmd := DeleteMessageQuery(
+		messagereq.Message_id.Int64(),
+		messagereq.Room_id.Int64(),
+		messagereq.Bucket,
+	)
+	logger.Logger.Sugar().Debug(cmd)
+	_, status = execute(nil, cmd)
+	return status
+}
 
-	if err := deleteMessageFromDb(message); err != nil {
-		logger.Logger.Sugar().Error("error deleting message", err, *message)
-		message.Status = 300
-	} else {
-		message.Status = 200
+func DeleteRoom(messagereq *constants.DeleteRoomRequest) (status *constants.Status) {
+	cmd := []string{
+		DeleteRoomQuery(messagereq.Room_id.Int64()),
+		DeleteLastReadsOnRoomDeleteQuery(messagereq.Room_id.Int64()),
 	}
-	return message
-}
-
-func DeleteRoom(messagereq *constants.DeleteRoomRequest) (message *constants.DeleteRoom) {
-	message.Author_id = messagereq.Author_id
-	message.Room_id = messagereq.Author_id
-
-	if err := deleteRoomFromDb(message); err != nil {
-		message.Status = 200
-	} else {
-		message.Status = 200
+	start, stop := make_buckets(messagereq.Room_id, nil)
+	for i := start; start < stop; start++ {
+		cmd = append(cmd, DeleteMessageOnRoomDeleteQuery(messagereq.Room_id.Int64(), i))
 	}
-	return message
+	logger.Logger.Sugar().Debug(cmd)
+	_, status = executeMultiple(nil, cmd)
+	return status
 }
 
-func registerMessage(message *constants.Message) error {
+func registerMessage(message *constants.Message) *constants.Status {
 	cmd := RegisterMessageQuery(
 		message.Room_id.Int64(),
 		make_bucket(message.Message_id),
@@ -76,12 +68,12 @@ func registerMessage(message *constants.Message) error {
 	)
 
 	logger.Logger.Sugar().Debug(cmd)
-	_, err := execute(nil, cmd)
-	return err
+	_, status := execute(nil, cmd)
+	return status
 }
 
 // TODO: gives data in reverse
-func readMessageFromDb(message *constants.MessageRead) error {
+func readMessageFromDb(message *constants.MessageRead) *constants.Status {
 	currentflake := snowflake.Generate()
 	lastmessageread := getUserLastReadSnowFlake(message.Author_id, message.Room_id)
 	if lastmessageread == nil {
@@ -93,22 +85,23 @@ func readMessageFromDb(message *constants.MessageRead) error {
 	for i := start; i < end; i++ {
 		cmd := ReadMessageQuery(message.Room_id.Int64(), i)
 		param := pb.QueryParameters{PageSize: message.PageSize, PagingState: message.PagingState}
-		res, err := execute(&param, cmd)
+		res, status := execute(&param, cmd)
 
-		if err != nil {
-			return err
+		if status.Value != constants.Ok {
+			logger.Logger.Sugar().Error("cql error: cannot read message", status)
+			return constants.Status_ErrCql
 		}
 
 		switch a := res.Result.(type) {
 		case *pb.Response_ResultSet:
 			for elm := range a.ResultSet.Rows {
 				row := a.ResultSet.Rows[elm].Values
-				name, err := execute(nil, cmd)
+				name, status := execute(nil, cmd)
 				cmd = GetUserNameFromUserIDQuery(message.Author_id.Int64())
 
-				if len(name.GetResultSet().Rows) == 0 || len(name.GetResultSet().Rows[0].Values) == 0 || err != nil {
+				if len(name.GetResultSet().Rows) == 0 || len(name.GetResultSet().Rows[0].Values) == 0 || status.Value != constants.Ok {
 					logger.Logger.Sugar().Error("error getting name of user %d", row[0])
-					return err
+					return constants.Status_ErrCql
 				}
 				doc := constants.MessageDocument{
 					Author_id: snowflake.ParseInt64(row[0].GetInt()),
@@ -120,35 +113,11 @@ func readMessageFromDb(message *constants.MessageRead) error {
 			}
 		default:
 			logger.Logger.Sugar().Errorf("undefined type while read query: %s", cmd)
-			return ErrCql
+			return constants.Status_ErrCql
 		}
 	}
 	message.Content = arr
-	return nil
-}
-
-func deleteMessageFromDb(message *constants.MessageDelete) error {
-	cmd := DeleteMessageQuery(
-		message.Message_id.Int64(),
-		message.Room_id.Int64(),
-		message.Bucket,
-	)
-	logger.Logger.Sugar().Debug(cmd)
-	_, err := execute(nil, cmd)
-	return err
-}
-
-func deleteRoomFromDb(message *constants.DeleteRoom) error {
-	cmd := []string{
-		DeleteRoomQuery(message.Room_id.Int64()),
-		DeleteLastReadsOnRoomDeleteQuery(message.Room_id.Int64()),
-	}
-	start, stop := make_buckets(message.Room_id, nil)
-	for i := start; start < stop; start++ {
-		cmd = append(cmd, DeleteMessageOnRoomDeleteQuery(message.Room_id.Int64(), i))
-	}
-	_, err := executeMultiple(nil, cmd)
-	return err
+	return constants.Status_Ok
 }
 
 func getUserLastReadSnowFlake(Author_id *snowflake.ID, Room_id *snowflake.ID) *snowflake.ID {
@@ -177,11 +146,11 @@ func getUserLastReadSnowFlake(Author_id *snowflake.ID, Room_id *snowflake.ID) *s
 func make_bucket(s *snowflake.ID) int64 {
 	var timestamp int64
 	if s == nil {
-		timestamp = (time.Now().Unix() * 1000) - epoch
+		timestamp = snowflake.Generate().Time()
 	} else {
 		// When a Snowflake is created it contains the number of
 		// seconds since the EPOCH.
-		timestamp = s.Int64() >> 22
+		timestamp = s.Time()
 	}
 	return timestamp / bucket_size
 }

@@ -6,23 +6,21 @@ import (
 	"github.com/abhirajranjan/spaces/chat/pkg/snowflake"
 )
 
-func CreateRoom(request *constants.RoomCreationRequest) (room *constants.Room) {
+func CreateRoom(request *constants.RoomCreationRequest) (room *constants.Room, status *constants.Status) {
 	id := snowflake.Generate()
 	room.Room_id = &id
 	room.Name = request.Name
 	room.Desc = request.Desc
 	room.Author_id = request.Author_id
-	if err := registerRoom(room); err != nil {
-		return nil
-	}
-	return room
+
+	status = registerRoom(room)
+	return room, status
 }
 
-func registerRoom(room *constants.Room) error {
+func registerRoom(room *constants.Room) *constants.Status {
 	cmd := RegisterRoomQuery(room.Room_id.Int64(), room.Author_id.Int64(), room.Name, room.Desc)
 	logger.Logger.Sugar().Debugln(cmd)
-	if _, err := execute(nil, cmd); err == ErrCql {
-		return err
-	}
-	return nil
+	// execute only returns status codes that can be handled by event handler
+	_, status := execute(nil, cmd)
+	return status
 }

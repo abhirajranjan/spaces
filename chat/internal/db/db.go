@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/abhirajranjan/spaces/chat/config"
+	"github.com/abhirajranjan/spaces/chat/pkg/constants"
 	"github.com/abhirajranjan/spaces/chat/pkg/logger"
 	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/auth"
 	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/client"
@@ -41,9 +42,9 @@ func init() {
 	}
 }
 
-func executeMultiple(param *pb.QueryParameters, queries []string) (res *pb.Response, err error) {
+func executeMultiple(param *pb.QueryParameters, queries []string) (res *pb.Response, status *constants.Status) {
 	if len(queries) == 0 {
-		return nil, ErrZeroQuery
+		return nil, constants.Status_ErrZeroQuery
 	}
 	var batchqueries []*pb.BatchQuery
 
@@ -56,20 +57,20 @@ func executeMultiple(param *pb.QueryParameters, queries []string) (res *pb.Respo
 		Type:    pb.Batch_LOGGED,
 		Queries: batchqueries,
 	}
-	res, err = db.ExecuteBatch(batch)
-	if err != nil {
-		logger.Logger.Sugar().Error(err)
-		return nil, ErrCql
+	res, _err := db.ExecuteBatch(batch)
+	if _err != nil {
+		logger.Logger.Sugar().Error(_err)
+		return nil, constants.Status_ErrCql
 	}
-	return res, nil
+	return res, constants.Status_Ok
 }
 
-func execute(param *pb.QueryParameters, query string) (*pb.Response, error) {
+func execute(param *pb.QueryParameters, query string) (res *pb.Response, status *constants.Status) {
 	exeQuery := &pb.Query{Cql: query, Parameters: param}
-	res, err := db.ExecuteQuery(exeQuery)
-	if err != nil {
-		logger.Logger.Sugar().Error(err)
-		return nil, ErrCql
+	res, _err := db.ExecuteQuery(exeQuery)
+	if _err != nil {
+		logger.Logger.Sugar().Error(_err)
+		return nil, constants.Status_ErrCql
 	}
-	return res, nil
+	return res, constants.Status_Ok
 }

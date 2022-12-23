@@ -1,9 +1,36 @@
 package constants
 
 import (
+	"fmt"
+
 	"github.com/bwmarrin/snowflake"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
+
+type Status struct {
+	Value int
+	Err   *error
+}
+
+func (d *Status) Error() string {
+	return fmt.Sprint(d.Err)
+}
+
+func NewStatus(value int, v any) *Status {
+	var err error
+	switch cus := v.(type) {
+	case string:
+		err = fmt.Errorf(cus)
+	case error:
+		err = cus
+	default:
+		return nil
+	}
+	return &Status{
+		Value: value,
+		Err:   &err,
+	}
+}
 
 // response
 
@@ -40,20 +67,6 @@ type Room struct {
 	Room_id   *snowflake.ID `json:"room_id"`
 	Name      string        `json:"name"`
 	Desc      string        `json:"desc"`
-	Author_id *snowflake.ID `json:"author_id"`
-}
-
-type MessageDelete struct {
-	Status     int           `json:"status"`
-	Room_id    *snowflake.ID `json:"room_id"`
-	Author_id  *snowflake.ID `json:"author_id"`
-	Message_id *snowflake.ID `json:"message_id"`
-	Bucket     int64         `json:"bucket"`
-}
-
-type DeleteRoom struct {
-	Status    int           `json:"status"`
-	Room_id   *snowflake.ID `json:"room_id"`
 	Author_id *snowflake.ID `json:"author_id"`
 }
 

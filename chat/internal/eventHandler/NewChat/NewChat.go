@@ -5,30 +5,43 @@ import (
 	"log"
 
 	"github.com/abhirajranjan/spaces/chat/internal/db"
-	eh "github.com/abhirajranjan/spaces/chat/internal/eventHandler"
 	"github.com/abhirajranjan/spaces/chat/pkg/constants"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-func Handle(request *kafka.Message) {
-	messagereq, err := decodeMessage(request)
-	if err == eh.ErrBadRequest {
-		// TODO: handle bad message request
-		log.Fatal("bad request")
-		return
+func Handle(message *kafka.Message) {
+	request, status := decodeMessage(message)
+	switch status.Value {
+	case constants.Ok:
+		res, status := db.CreateMessage(request)
+		if status.Value != constants.Ok {
+			// TODO: handle errcql while creating message
+			log.Fatal("Server Error", res)
+		}
+		// TODO: return message created
+
+	case constants.BadRequestErr:
+		// TODO: handle bad request
 	}
-	message := db.CreateMessage(messagereq)
-	if message == nil {
-		// TODO: handle errcql while creating message
-		log.Fatal("Server Error")
-	}
-	// TODO: return message created
-	log.Println(message)
 }
 
-func decodeMessage(request *kafka.Message) (message *constants.MessageRequest, err error) {
-	if err := json.Unmarshal(request.Value, &message); err != nil {
-		return nil, eh.ErrBadRequest
+func decodeMessage(message *kafka.Message) (request *constants.MessageRequest, status *constants.Status) {
+	if err := json.Unmarshal(message.Value, &request); err != nil {
+		return nil, constants.GenerateBadRequest("poorly formatted data")
 	}
-	return message, nil
+	status = checkRequestForNecessaryData(request)
+	return request, status
+}
+
+func checkRequestForNecessaryData(request *constants.MessageRequest) (status *constants.Status) {
+	if request.Author_id == nil {
+		return constants.GenerateBadRequest("author id cannot be null")
+	}
+	if request.Room_id == nil {
+		return constants.GenerateBadRequest("room id cannot be null")
+	}
+	if request.Content == "" {
+		return constants.GenerateBadRequest("content cannot be empty")
+	}
+	return constants.Status_Ok
 }
