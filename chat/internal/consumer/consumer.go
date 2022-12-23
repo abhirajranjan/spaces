@@ -21,7 +21,7 @@ func Initialize(c kafka.ConfigMap) {
 		log.Fatalf("Failed to create consumer: %s", err)
 		os.Exit(1)
 	}
-	err = Consumer.SubscribeTopics([]string{constants.Self}, nil)
+	err = Consumer.SubscribeTopics(constants.KafkaListenOn, nil)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)

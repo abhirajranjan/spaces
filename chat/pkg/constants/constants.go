@@ -1,29 +1,35 @@
 package constants
 
 // lists the topic event utilised in the service
-var Self = "chat"
 
-// get
-var Event_ReadChat = "chat.ReadChat"
+var (
+	Self = "chat"
 
-// post
-var Event_NewChat = "chat.NewChat"
-var Event_DeleteChat = "chat.DeleteChat"
-var Event_CreateRoom = "chat.CreateRoom"
-var Event_DeleteRoom = "chat.DeleteRoom"
-var Event_NewUserCreated = "user.NewUserCreated"
+	KafkaListenOn = []string{
+		Self,
+		"user",
+	}
+	// get
+	Event_ReadChat = "chat.ReadChat"
 
-var ConsumeGroupID = "chat"
-var Log = "logging"
+	// post
+	Event_NewChat        = "chat.NewChat"
+	Event_DeleteChat     = "chat.DeleteChat"
+	Event_CreateRoom     = "chat.CreateRoom"
+	Event_DeleteRoom     = "chat.DeleteRoom"
+	Event_NewUserCreated = "user.NewUserCreated"
 
-// enviroment variables
-// * kafka config *
-var ENV_producerConfig = "KAFKA_PRODUCER_CONFIG"
-var ENV_consumerConfig = "KAFKA_CONSUMER_CONFIG"
+	ConsumeGroupID = "chat"
+	Log            = "logging"
 
-// * AstraDB config *
-var ENV_astraClusterId = "ASTRA_CLUSTER_ID"
-var ENV_astraRegion = "ASTRA_REGION"
-var ENV_BearerToken = "ASTRA_BEARER_TOKEN"
+	// enviroment variables
+	// * kafka config *
+	ENV_producerConfig = "KAFKA_PRODUCER_CONFIG"
+	ENV_consumerConfig = "KAFKA_CONSUMER_CONFIG"
 
-var DB_URI = "%s-%s.apps.astra.datastax.com:443"
+	// * AstraDB config *
+	ENV_astraClusterId = "ASTRA_CLUSTER_ID"
+	ENV_astraRegion    = "ASTRA_REGION"
+	ENV_BearerToken    = "ASTRA_BEARER_TOKEN"
+	DB_URI             = "%s-%s.apps.astra.datastax.com:443"
+)
