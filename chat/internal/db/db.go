@@ -41,9 +41,9 @@ func init() {
 	}
 }
 
-func executeMultiple(queries ...string) *pb.Response {
+func executeMultiple(param *pb.QueryParameters, queries []string) (res *pb.Response, err error) {
 	if len(queries) == 0 {
-		return nil
+		return nil, ErrZeroQuery
 	}
 	var batchqueries []*pb.BatchQuery
 
@@ -56,11 +56,12 @@ func executeMultiple(queries ...string) *pb.Response {
 		Type:    pb.Batch_LOGGED,
 		Queries: batchqueries,
 	}
-	res, err := db.ExecuteBatch(batch)
+	res, err = db.ExecuteBatch(batch)
 	if err != nil {
 		logger.Logger.Sugar().Error(err)
+		return nil, ErrCql
 	}
-	return res
+	return res, nil
 }
 
 func execute(param *pb.QueryParameters, query string) (*pb.Response, error) {

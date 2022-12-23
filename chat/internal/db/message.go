@@ -54,6 +54,18 @@ func DeleteChat(messagereq *constants.MessageDeleteRequest) (message *constants.
 	return message
 }
 
+func DeleteRoom(messagereq *constants.DeleteRoomRequest) (message *constants.DeleteRoom) {
+	message.Author_id = messagereq.Author_id
+	message.Room_id = messagereq.Author_id
+
+	if err := deleteRoomFromDb(message); err != nil {
+		message.Status = 200
+	} else {
+		message.Status = 200
+	}
+	return message
+}
+
 func registerMessage(message *constants.Message) error {
 	cmd := RegisterMessageQuery(
 		message.Room_id.Int64(),
@@ -123,6 +135,19 @@ func deleteMessageFromDb(message *constants.MessageDelete) error {
 	)
 	logger.Logger.Sugar().Debug(cmd)
 	_, err := execute(nil, cmd)
+	return err
+}
+
+func deleteRoomFromDb(message *constants.DeleteRoom) error {
+	cmd := []string{
+		DeleteRoomQuery(message.Room_id.Int64()),
+		DeleteLastReadsOnRoomDeleteQuery(message.Room_id.Int64()),
+	}
+	start, stop := make_buckets(message.Room_id, nil)
+	for i := start; start < stop; start++ {
+		cmd = append(cmd, DeleteMessageOnRoomDeleteQuery(message.Room_id.Int64(), i))
+	}
+	_, err := executeMultiple(nil, cmd)
 	return err
 }
 

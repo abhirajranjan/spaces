@@ -23,6 +23,7 @@ type MessageRead struct {
 	Content     []*MessageDocument
 }
 
+// TODO: BUG: dont give author id else one can replicate them
 type MessageDocument struct {
 	Author_id *snowflake.ID `json:"author_id"`
 	Name      string        `json:"name"`
@@ -48,6 +49,12 @@ type MessageDelete struct {
 	Author_id  *snowflake.ID `json:"author_id"`
 	Message_id *snowflake.ID `json:"message_id"`
 	Bucket     int64         `json:"bucket"`
+}
+
+type DeleteRoom struct {
+	Status    int           `json:"status"`
+	Room_id   *snowflake.ID `json:"room_id"`
+	Author_id *snowflake.ID `json:"author_id"`
 }
 
 // requests
@@ -76,6 +83,11 @@ type MessageDeleteRequest struct {
 	Author_id  *snowflake.ID `json:"author_id"`
 	Message_id *snowflake.ID `json:"message_id"`
 	Bucket     int64         `json:"bucket"`
+}
+
+type DeleteRoomRequest struct {
+	Room_id   *snowflake.ID `json:"room_id"`
+	Author_id *snowflake.ID `json:"author_id"`
 }
 
 // passive listeners
