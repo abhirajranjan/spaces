@@ -82,8 +82,8 @@ func readMessageFromDb(message *constants.MessageRead) *constants.Status {
 	start, end := make_buckets(lastmessageread, &currentflake)
 
 	var arr []*constants.MessageDocument
-	for i := start; i < end; i++ {
-		cmd := ReadMessageQuery(message.Room_id.Int64(), i)
+	for bucket := start; bucket < end; bucket++ {
+		cmd := ReadMessageQuery(message.Room_id.Int64(), bucket)
 		param := pb.QueryParameters{PageSize: message.PageSize, PagingState: message.PagingState}
 		res, status := execute(&param, cmd)
 
@@ -104,10 +104,10 @@ func readMessageFromDb(message *constants.MessageRead) *constants.Status {
 					return constants.Status_ErrCql
 				}
 				doc := constants.MessageDocument{
-					Author_id: snowflake.ParseInt64(row[0].GetInt()),
-					Content:   row[1].GetString_(),
-					Time:      snowflake.ParseInt64(row[2].GetInt()).Time(),
-					Name:      name.GetResultSet().Rows[0].Values[0].GetString_(),
+					Name:    name.GetResultSet().Rows[0].Values[0].GetString_(),
+					Content: row[1].GetString_(),
+					Time:    snowflake.ParseInt64(row[2].GetInt()).Time(),
+					Bucket:  bucket,
 				}
 				arr = append(arr, &doc)
 			}

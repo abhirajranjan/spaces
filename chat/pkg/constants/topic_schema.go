@@ -50,13 +50,11 @@ type MessageRead struct {
 	Content     []*MessageDocument
 }
 
-// TODO: BUG: dont give author id else one can replicate them
 type MessageDocument struct {
-	Author_id *snowflake.ID `json:"author_id"`
-	Name      string        `json:"name"`
-	Content   string        `json:"content"`
-	Time      int64         `json:"time"`
-	Bucket    int64         `json:"bucket"`
+	Name    string `json:"name"`
+	Content string `json:"content"`
+	Time    int64  `json:"time"`
+	Bucket  int64  `json:"bucket"`
 }
 
 type User struct {
