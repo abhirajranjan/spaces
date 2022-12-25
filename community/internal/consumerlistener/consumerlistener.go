@@ -8,12 +8,11 @@ import (
 	"syscall"
 	"time"
 
-	GC "github.com/abhirajranjan/spaces/community/internal/GetCommunity"
-	NC "github.com/abhirajranjan/spaces/community/internal/NewCommunity"
-	NS "github.com/abhirajranjan/spaces/community/internal/NewSpace"
-	SC "github.com/abhirajranjan/spaces/community/internal/SearchCommunity"
-	UM "github.com/abhirajranjan/spaces/community/internal/UpdateMetadata"
 	"github.com/abhirajranjan/spaces/community/internal/consumer"
+	GC "github.com/abhirajranjan/spaces/community/internal/eventHandler/GetCommunity"
+	NC "github.com/abhirajranjan/spaces/community/internal/eventHandler/NewCommunity"
+	SC "github.com/abhirajranjan/spaces/community/internal/eventHandler/SearchCommunity"
+	UC "github.com/abhirajranjan/spaces/community/internal/eventHandler/UpdateCommunity"
 	"github.com/abhirajranjan/spaces/community/pkg/constants"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
@@ -49,9 +48,7 @@ func processEvent(message *kafka.Message) {
 		SC.Handle(message)
 	case constants.NewCommunity:
 		NC.Handle(message)
-	case constants.NewSpace:
-		NS.Handle(message)
-	case constants.UpdateMetaData:
-		UM.Handle(message)
+	case constants.UpdateCommunity:
+		UC.Handle(message)
 	}
 }

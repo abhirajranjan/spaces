@@ -8,7 +8,6 @@ import (
 	"github.com/abhirajranjan/spaces/community/pkg/constants"
 	"github.com/abhirajranjan/spaces/community/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -32,15 +31,76 @@ func InitDb(database string, coll string) {
 	collection = client.Database(database).Collection(coll)
 }
 
-func CommunityRequestToBson(json constants.Community) (d bson.D) {
-	if json.Id == 0 {
-		d = append(d, primitive.E{Key: "id", Value: json.Id})
+func find[T any](doc interface{}, opts *options.FindOptions) (*[]T, *constants.Status) {
+	cur, err := collection.Find(ctx, doc, opts)
+	if err != nil {
+		logger.Logger.Sugar().Error(err)
+		return nil, constants.Status_ErrDb
 	}
-	if json.Name == "" {
-		d = append(d, primitive.E{Key: "name", Value: json.Name})
+	var arr []T
+
+	if err := cur.All(ctx, &arr); err != nil {
+		logger.Logger.Sugar().Error(err)
+		return nil, constants.Status_ErrDb
 	}
-	if json.Tag == "" {
-		d = append(d, primitive.E{Key: "tag", Value: json.Tag})
+
+	return &arr, constants.Status_Ok
+}
+
+func findOne[T any](doc interface{}, opts *options.FindOneOptions) (*T, *constants.Status) {
+	res := collection.FindOne(ctx, doc, opts)
+	var tempHolder T
+	switch res.Err() {
+	case mongo.ErrNoDocuments:
+		return &tempHolder, constants.Status_NoDocuments
+
+	case nil:
+		if err := res.Decode(&tempHolder); err != nil {
+			logger.Logger.Sugar().Error(err)
+			return nil, constants.Status_ErrDb
+		}
+		return &tempHolder, constants.Status_Ok
+
+	default:
+		logger.Logger.Sugar().Error(res.Err())
+		return nil, constants.Status_ErrDb
 	}
-	return d
+}
+
+func aggregate[T any](stages []bson.D, opts *options.AggregateOptions) (*[]T, *constants.Status) {
+	cur, err := collection.Aggregate(ctx, stages, opts)
+	if err != nil {
+		logger.Logger.Sugar().Error(err)
+		return nil, constants.Status_ErrDb
+	}
+	var arr []T
+	if err := cur.All(ctx, &arr); err != nil {
+		logger.Logger.Sugar().Error(err)
+		return nil, constants.Status_ErrDb
+	}
+	return &arr, constants.Status_Ok
+}
+
+func InsertOne[T any](doc interface{}, opt *options.InsertOneOptions) (*T, *constants.Status) {
+	res, err := collection.InsertOne(ctx, doc, opt)
+	if err != nil {
+		logger.Logger.Sugar().Error(err)
+		return nil, constants.Status_ErrDb
+	}
+	objID := res.InsertedID.(T)
+	return &objID, constants.Status_Ok
+}
+
+func FindOneAndUpdate[T any](id interface{}, update interface{}, opt *options.FindOneAndUpdateOptions) (*T, *constants.Status) {
+	res := collection.FindOneAndUpdate(ctx, id, update, opt)
+	if res.Err() != nil {
+		logger.Logger.Sugar().Error(res.Err())
+		return nil, constants.Status_ErrDb
+	}
+	var tempHolder T
+	if err := res.Decode(&tempHolder); err != nil {
+		logger.Logger.Sugar().Error(err)
+		return nil, constants.Status_ErrDb
+	}
+	return &tempHolder, constants.Status_Ok
 }
