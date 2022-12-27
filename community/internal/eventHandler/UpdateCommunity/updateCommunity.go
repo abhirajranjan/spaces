@@ -6,30 +6,31 @@ import (
 
 	"github.com/abhirajranjan/spaces/community/internal/db"
 	"github.com/abhirajranjan/spaces/community/pkg/constants"
+	"github.com/abhirajranjan/spaces/community/pkg/status"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 // TODO: add validation of user to modify data
 func Handle(message *kafka.Message) {
-	request, status := decodeMessage(message)
-	switch status.Value {
-	case constants.BadRequestErr:
+	request, _status := decodeMessage(message)
+	switch _status.Value {
+	case status.BadRequestErr:
 		// TODO: handle err db
-	case constants.Ok:
-		res, status := db.UpdateCommunity(request)
-		switch status.Value {
-		case constants.InternalServerErr:
+	case status.Ok:
+		res, _status := db.UpdateCommunity(request)
+		switch _status.Value {
+		case status.InternalServerErr:
 			// TODO: handle internal server error
-		case constants.Ok:
+		case status.Ok:
 			// TODO: return updated data
 			fmt.Println(res)
 		}
 	}
 }
 
-func decodeMessage(message *kafka.Message) (request *constants.UpdatedCommunityRequest, status *constants.Status) {
+func decodeMessage(message *kafka.Message) (request *constants.UpdatedCommunityRequest, s *status.Status) {
 	if err := json.Unmarshal(message.Value, &request); err != nil {
-		return nil, constants.GenerateBadRequest("poorly formatted data")
+		return nil, status.GenerateBadRequest("poorly formatted data")
 	}
-	return request, constants.Status_Ok
+	return request, status.OkStatus
 }

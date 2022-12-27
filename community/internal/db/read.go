@@ -2,11 +2,12 @@ package db
 
 import (
 	"github.com/abhirajranjan/spaces/community/pkg/constants"
+	"github.com/abhirajranjan/spaces/community/pkg/status"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func SearchCommunity(request *constants.SearchCommunityRequest) (*[]constants.SearchCommunityResponse, *constants.Status) {
+func SearchCommunity(request *constants.SearchCommunityRequest) (*[]constants.SearchCommunityResponse, *status.Status) {
 	stages := []bson.D{
 		// match stage
 		{{
@@ -43,7 +44,7 @@ func SearchCommunity(request *constants.SearchCommunityRequest) (*[]constants.Se
 	return aggregate[constants.SearchCommunityResponse](stages, &opts)
 }
 
-func GetCommunity(request *constants.GetCommunityRequest) (*constants.GetCommunityResponse, *constants.Status) {
+func GetCommunity(request *constants.GetCommunityRequest) (*constants.GetCommunityResponse, *status.Status) {
 	doc := bson.D{{
 		Key: "$and",
 		Value: bson.A{

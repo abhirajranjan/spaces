@@ -1,38 +1,11 @@
 package constants
 
 import (
-	"fmt"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/bwmarrin/snowflake"
 )
 
-type Status struct {
-	Value int
-	Err   *error
-}
-
-func (d *Status) Error() string {
-	return fmt.Sprint(d.Err)
-}
-
-func NewStatus(value int, v any) *Status {
-	var err error
-	switch cus := v.(type) {
-	case string:
-		err = fmt.Errorf(cus)
-	case error:
-		err = cus
-	default:
-		return nil
-	}
-	return &Status{
-		Value: value,
-		Err:   &err,
-	}
-}
-
 type SpacePreview struct {
-	Id           *primitive.ObjectID
+	Id           *snowflake.ID
 	Name         string
 	Tag          string
 	Display_name string
@@ -41,13 +14,13 @@ type SpacePreview struct {
 }
 
 type Community struct {
-	Id           *primitive.ObjectID `bson:"_id"`
-	Name         string              `bson:"name"`
-	Tag          string              `bson:"tag"`
-	Display_name string              `bson:"display_name"`
-	Description  string              `bson:"description"`
-	Banner       string              `bson:"banner"`
-	Spaces       []SpacePreview      `bson:"spaces"`
+	Id           *snowflake.ID  `bson:"_id"`
+	Name         string         `bson:"name"`
+	Tag          string         `bson:"tag"`
+	Display_name string         `bson:"display_name"`
+	Description  string         `bson:"description"`
+	Banner       string         `bson:"banner"`
+	Spaces       []SpacePreview `bson:"spaces"`
 }
 
 // requests

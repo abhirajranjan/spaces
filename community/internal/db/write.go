@@ -2,19 +2,20 @@ package db
 
 import (
 	"github.com/abhirajranjan/spaces/community/pkg/constants"
+	"github.com/abhirajranjan/spaces/community/pkg/snowflake"
+	"github.com/abhirajranjan/spaces/community/pkg/status"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func NewCommunity(request *constants.NewCommunityRequest) (*constants.NewCommunityResponse, *constants.Status) {
+func NewCommunity(request *constants.NewCommunityRequest) (*constants.NewCommunityResponse, *status.Status) {
 	doc := bson.D{
 		{Key: "name", Value: request.Name},
 		{Key: "tag", Value: request.Tag},
 		{Key: "description", Value: request.Description},
 		{Key: "banner", Value: request.Banner},
 	}
-	object_id, status := InsertOne[primitive.ObjectID](doc, nil)
+	object_id, status := InsertOne[snowflake.ID](doc, nil)
 	response := constants.NewCommunityResponse{
 		Id:           object_id,
 		Name:         request.Name,
@@ -26,8 +27,8 @@ func NewCommunity(request *constants.NewCommunityRequest) (*constants.NewCommuni
 	return &response, status
 }
 
-func UpdateCommunity(request *constants.UpdatedCommunityRequest) (*constants.UpdatedCommunityResponse, *constants.Status) {
-	var tempHolder bson.M
+func UpdateCommunity(request *constants.UpdatedCommunityRequest) (*constants.UpdatedCommunityResponse, *status.Status) {
+	tempHolder := bson.M{}
 	if request.Banner != "" {
 		tempHolder["banner"] = request.Banner
 	}

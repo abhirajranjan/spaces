@@ -3,6 +3,7 @@ module github.com/abhirajranjan/spaces/community
 go 1.18
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/confluentinc/confluent-kafka-go v1.9.2
 	go.mongodb.org/mongo-driver v1.11.1
 	go.uber.org/zap v1.24.0
