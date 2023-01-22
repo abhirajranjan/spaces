@@ -9,8 +9,7 @@ var SearchCommunity string = "community.SearchCommunity"
 
 // post events
 var NewCommunity string = "community.NewCommunity"
-var NewSpace string = "community.NewSpace"
-var UpdateMetaData string = "community.UpdateMetaData"
+var UpdateCommunity string = "community.UpdateCommunity"
 
 var ConsumeGroupID string = "community"
 var Log string = "logging"
