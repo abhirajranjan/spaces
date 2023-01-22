@@ -14,14 +14,14 @@ import (
 func Handle(message *kafka.Message) {
 	request, _status := decodeMessage(message)
 	switch _status.Value {
-	case status.BadRequestErr:
+	case status.BadRequestErrCode:
 		// TODO: handle err db
-	case status.Ok:
+	case status.OkCode:
 		res, _status := db.UpdateCommunity(request)
 		switch _status.Value {
-		case status.InternalServerErr:
+		case status.InternalServerErrCode:
 			// TODO: handle internal server error
-		case status.Ok:
+		case status.OkCode:
 			// TODO: return updated data
 			fmt.Println(res)
 		}
@@ -32,5 +32,5 @@ func decodeMessage(message *kafka.Message) (request *constants.UpdatedCommunityR
 	if err := json.Unmarshal(message.Value, &request); err != nil {
 		return nil, status.GenerateBadRequest("poorly formatted data")
 	}
-	return request, status.OkStatus
+	return request, status.Ok
 }

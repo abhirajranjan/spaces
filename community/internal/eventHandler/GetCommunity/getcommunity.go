@@ -13,17 +13,17 @@ import (
 func Handle(message *kafka.Message) {
 	request, _status := decodeMessage(message)
 	switch _status.Value {
-	case status.BadRequestErr:
+	case status.BadRequestErrCode:
 		// TODO: handle bad request err
-	case status.Ok:
+	case status.OkCode:
 		community, _status := db.GetCommunity(request)
 		switch _status.Value {
-		case status.InternalServerErr:
+		case status.InternalServerErrCode:
 			//TODO: handle errdb
 			print(community)
-		case status.NoDataFound:
+		case status.NoDataFoundCode:
 			// TODO: handle no data matched
-		case status.Ok:
+		case status.OkCode:
 			// TODO: return community json
 		default:
 			logger.Logger.Sugar().Warn("no error matching pattern found", _status)
@@ -44,5 +44,5 @@ func checkRequestForNecessaryData(request *constants.GetCommunityRequest) (s *st
 	if request.Name == "" && request.Tag == "" {
 		return status.GenerateBadRequest("name and tag both cannot be empty")
 	}
-	return status.OkStatus
+	return status.Ok
 }

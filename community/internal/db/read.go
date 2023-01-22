@@ -41,7 +41,7 @@ func SearchCommunity(request *constants.SearchCommunityRequest) (*[]constants.Se
 	opts := options.AggregateOptions{
 		BatchSize: &ps,
 	}
-	return aggregate[constants.SearchCommunityResponse](stages, &opts)
+	return aggregate[constants.SearchCommunityResponse](NSCommunity, stages, &opts)
 }
 
 func GetCommunity(request *constants.GetCommunityRequest) (*constants.GetCommunityResponse, *status.Status) {
@@ -60,5 +60,5 @@ func GetCommunity(request *constants.GetCommunityRequest) (*constants.GetCommuni
 		},
 	}}
 
-	return findOne[constants.GetCommunityResponse](doc, nil)
+	return findOne[constants.GetCommunityResponse](NSCommunity, doc, nil)
 }

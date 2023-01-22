@@ -12,11 +12,11 @@ import (
 func Handle(message *kafka.Message) {
 	request, _status := decodeMessage(message)
 	switch _status.Value {
-	case status.BadRequestErr:
+	case status.BadRequestErrCode:
 		// TODO: handle bad requests
-	case status.Ok:
+	case status.OkCode:
 		searchresponse, _status := db.SearchCommunity(request)
-		if _status.Value != status.Ok {
+		if _status.Value != status.OkCode {
 			// TODO: handle errdb
 			print(searchresponse)
 		}
@@ -40,5 +40,5 @@ func checkRequestForNecessaryData(request *constants.SearchCommunityRequest) (s 
 	if request.Pagesize == 0 {
 		return status.GenerateBadRequest("page size cannot be null")
 	}
-	return status.OkStatus
+	return status.Ok
 }

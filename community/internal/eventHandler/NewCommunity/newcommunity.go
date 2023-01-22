@@ -13,14 +13,14 @@ import (
 func Handle(message *kafka.Message) {
 	request, _status := decodeMessage(message)
 	switch _status.Value {
-	case status.BadRequestErr:
+	case status.BadRequestErrCode:
 		//TODO: handle bad request error
-	case status.Ok:
+	case status.OkCode:
 		res, _status := db.NewCommunity(request)
 		switch _status.Value {
-		case status.InternalServerErr:
+		case status.InternalServerErrCode:
 			//TODO: handle server error
-		case status.Ok:
+		case status.OkCode:
 			// TODO: return new community data
 			print(res)
 		}
@@ -47,12 +47,12 @@ func checkRequestForNecessaryData(request *constants.NewCommunityRequest) (s *st
 	testRequest.Tag = request.Tag
 
 	switch _, tempstatus := db.GetCommunity(&testRequest); tempstatus.Value {
-	case status.Ok:
-		return status.AccountAlreadyExists
-	case status.InternalServerErr:
+	case status.OkCode:
+		return status.DataAlreadyExists
+	case status.InternalServerErrCode:
 		return status.ErrDb
-	case status.NoDataFound:
-		return status.OkStatus
+	case status.NoDataFoundCode:
+		return status.Ok
 	default:
 		logger.Logger.Sugar().Warn("unknown error type encountered", tempstatus)
 		return status.ErrDb
